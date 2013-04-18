@@ -1,0 +1,1 @@
+mvn install:install-file -Dfile=jFin_DateMath_R1_0_1.jar -DgroupId=org.jfin -DartifactId=datemath -Dversion=1.0.1R -Dpackaging=jar

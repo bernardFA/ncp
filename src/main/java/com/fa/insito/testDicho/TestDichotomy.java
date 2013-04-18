@@ -1,8 +1,6 @@
 package com.fa.insito.testDicho;
 
 
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.Ranges;
 import org.apache.tapestry5.func.F;
 import org.apache.tapestry5.func.Mapper;
 import org.apache.tapestry5.func.Reducer;
@@ -13,8 +11,7 @@ import org.joda.time.DateMidnight;
 
 import java.util.*;
 
-import static com.google.common.collect.DiscreteDomains.integers;
-import static java.lang.Math.abs;
+
 
 public class TestDichotomy {
 
@@ -43,8 +40,8 @@ public class TestDichotomy {
                     final double residualValue) {
 
         final ColumnInteger colIndex = new ColumnInteger(ColumnType.PeriodIndex,
-               //F.series(0, numberOfPeriods).toList());
-               Ranges.closedOpen(0, numberOfPeriods).asSet(integers()));
+               F.series(0, numberOfPeriods).toList());
+               //Ranges.closedOpen(0, numberOfPeriods).asSet(integers()));
 
         final ColumnDate colInterestStart = new ColumnDate(ColumnType.InterestStart,
                 F.flow(colIndex).map(new Mapper<Integer, DateMidnight>() {
@@ -287,11 +284,11 @@ class ColumnDate extends Column<DateMidnight> {
     ColumnDate(ColumnType columnType, Collection<? extends DateMidnight> collection) {
         super(collection, columnType);
     }
-
-    ColumnDate(ColumnType columnType, FluentIterable<DateMidnight> dates) {
-        super(columnType);
-        addAll(dates.toImmutableList());
-    }
+//
+//    ColumnDate(ColumnType columnType, FluentIterable<DateMidnight> dates) {
+//        super(columnType);
+//        addAll(dates.toImmutableList());
+//    }
 
     @Override
     public ColumnDate fillAllWith(int lines, DateMidnight dateMidnight) {

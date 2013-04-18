@@ -20,6 +20,7 @@ import static java.lang.Math.floor;
 public class TestColModel {
 
     public static void main(String[] args) {
+
         new TestColModel().assemblage(
                 PaymentType.IN_ARREARS,
                 20,
@@ -44,7 +45,6 @@ public class TestColModel {
                            final double residualValue) {
 
         final ColumnInteger colIndex = new ColumnInteger(ColumnType.PeriodIndex,
-                //F.series(0, numberOfPeriods).toList());
                 Ranges.closedOpen(0, numberOfPeriods).asSet(integers()));
 
         final ColumnDate colInterestStart = new ColumnDate(ColumnType.InterestStart,
