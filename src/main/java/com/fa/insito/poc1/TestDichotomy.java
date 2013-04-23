@@ -1,8 +1,6 @@
-package com.fa.insito;
+package com.fa.insito.poc1;
 
 
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.Ranges;
 import org.apache.tapestry5.func.F;
 import org.apache.tapestry5.func.Mapper;
 import org.apache.tapestry5.func.Reducer;
@@ -13,15 +11,12 @@ import org.joda.time.DateMidnight;
 
 import java.util.*;
 
-import static com.google.common.collect.DiscreteDomains.integers;
-import static java.lang.Math.abs;
-import static java.lang.Math.floor;
 
-public class TestColModel {
+
+public class TestDichotomy {
 
     public static void main(String[] args) {
-
-        new TestColModel().assemblage(
+        new TestDichotomy().assemblage(
                 PaymentType.IN_ARREARS,
                 20,
                 new DateMidnight(2013, 1, 1),
@@ -36,16 +31,17 @@ public class TestColModel {
     private static final double delta = 10e-7d;
 
     ColumnGroup assemblage(final PaymentType paymentType,
-                           final int numberOfPeriods,
-                           final DateMidnight startDate,
-                           final int payFrequency,
-                           final DaycountCalculator daycountCalculator,
-                           final double initialAmount,
-                           final double rent,
-                           final double residualValue) {
+                    final int numberOfPeriods,
+                    final DateMidnight startDate,
+                    final int payFrequency,
+                    final DaycountCalculator daycountCalculator,
+                    final double initialAmount,
+                    final double rent,
+                    final double residualValue) {
 
         final ColumnInteger colIndex = new ColumnInteger(ColumnType.PeriodIndex,
-                Ranges.closedOpen(0, numberOfPeriods).asSet(integers()));
+               F.series(0, numberOfPeriods).toList());
+               //Ranges.closedOpen(0, numberOfPeriods).asSet(integers()));
 
         final ColumnDate colInterestStart = new ColumnDate(ColumnType.InterestStart,
                 F.flow(colIndex).map(new Mapper<Integer, DateMidnight>() {
@@ -55,7 +51,6 @@ public class TestColModel {
                     }
                 }).toList());
 
-
         final ColumnDate colInterestEnd = new ColumnDate(ColumnType.InterestEnd,
                 F.flow(colIndex).map(new Mapper<Integer, DateMidnight>() {
                     @Override
@@ -64,26 +59,60 @@ public class TestColModel {
                     }
                 }).toList());
 
-        final ColumnDouble colInterestYearFraction = new ColumnDouble(ColumnType.InterestYearFraction).setFormula(
-                new Formula<Double>() {
+        final ColumnDouble colInterestYearFraction = new ColumnDouble(ColumnType.InterestYearFraction,
+                F.flow(colIndex).map(new Mapper<Integer, Double>() {
                     @Override
-                    public Double func() {
+                    public Double map(Integer index) {
                         return daycountCalculator.calculateDaycountFraction(
-                                value("colInterestStart").toGregorianCalendar(),
-                                value("colInterestEnd").toGregorianCalendar());
+                                colInterestStart.get(index).toGregorianCalendar(),
+                                colInterestEnd.get(index).toGregorianCalendar());
                     }
-                });
+                }).toList());
 
-        final ColumnGroup columGroup = new ColumnGroup(
+        final ColumnDate colPaymentDate = new ColumnDate(ColumnType.PaymentDate,
+                F.flow(colIndex).map(new Mapper<Integer, DateMidnight>() {
+                    @Override
+                    public DateMidnight map(Integer index) {
+                        return paymentType.paymentDate(colInterestStart.get(index), colInterestEnd.get(index));
+                    }
+                }).toList());
+
+        final ColumnDouble colPayment = new ColumnDouble(ColumnType.Payment).fillAllWith(numberOfPeriods, rent);
+
+        final ColumnGroup colStatics = new ColumnGroup(
                 colIndex,
-                colInterestStart,
-                colInterestEnd,
-                colInterestYearFraction).calc();
+                colInterestYearFraction,
+                colPaymentDate,
+                colPayment,
+                new ColumnDouble(ColumnType.Outstanding),
+                new ColumnDouble(ColumnType.CRD).initialiseWith(initialAmount));
 
-        return null;
+        Mapper<Double, Double> leasingCalcul = new Mapper<Double, Double>() {
+            @Override
+            public Double map(Double rate) {
+                return colStatics.putColumn(new ColumnDouble(ColumnType.Rate).fillAllWith(numberOfPeriods, rate))
+                        .map(new LeasingCalculator())
+                        .reduce(new ZeroReducer(residualValue), initialAmount);
+            }
+        };
+        double rate = dichotomy(0.0d, 1.0d, 30, leasingCalcul);
+
+        return colStatics.putColumn(new ColumnDouble(ColumnType.Rate).fillAllWith(numberOfPeriods, rate));
     }
 
-
+    double dichotomy(double up, double down, int nbIter, Mapper<Double, Double> function) {
+        double mid = up*2; // crazy value
+        for (int i=0; i<nbIter; i++) {
+            mid = (up+down)/2;
+            double zeroTarget = function.map(mid);
+            if (zeroTarget > 0)
+                up = mid;
+            else
+                down = mid;
+            System.out.println(mid);
+        }
+        return mid;
+    }
 
 
 //InterestPeriod.is(Cal.YearFraction(InterestStart, InterestEnd))
@@ -95,24 +124,24 @@ public class TestColModel {
 //Capital = Payment - Interest
 //CRD = Outstanding - Capital
 
-    class ZeroReducer implements Reducer<Double, ColumnGroup> {
+class ZeroReducer implements Reducer<Double, ColumnGroup> {
 
-        double residualValue;
+    double residualValue;
 
-        ZeroReducer(double residualValue) {
-            this.residualValue = residualValue;
-        }
+    ZeroReducer(double residualValue) {
+        this.residualValue = residualValue;
+    }
 
-        @Override
-        public Double reduce(Double initialAmount, ColumnGroup columnGroup) {
-            return initialAmount - (columnGroup.getColDouble(ColumnType.Capital).sum() + residualValue);
-        }
+    @Override
+    public Double reduce(Double initialAmount, ColumnGroup columnGroup) {
+        return initialAmount - (columnGroup.getColDouble(ColumnType.Capital).sum() + residualValue);
+    }
 
-    };
+};
 
-    class LeasingCalculator implements Mapper<ColumnGroup, ColumnGroup> {
+class LeasingCalculator implements Mapper<ColumnGroup, ColumnGroup> {
 
-        public ColumnGroup map(ColumnGroup cols) {
+    public ColumnGroup map(ColumnGroup cols) {
 
             // statics cols
             final ColumnInteger colIndex = cols.getColInteger(ColumnType.PeriodIndex);
@@ -170,7 +199,7 @@ enum PaymentType {
 }
 
 
-enum ColumnType {
+enum ColumnType{
     PeriodIndex,
     InterestBound,
     Interval,
@@ -206,12 +235,6 @@ class Column<T> extends ArrayList<T> {
         this.columnType = columnType;
     }
 
-    Column(ColumnType columnType, Formula<T> formula) {
-        this.columnType = columnType;
-        this.formula = formula;
-    }
-
-
     public T getBefore(int index) {
         if (index == 0)
             return initialiser;
@@ -225,7 +248,7 @@ class Column<T> extends ArrayList<T> {
     }
 
     public Column<T> fillWith(int i, T t) {
-        add(i, t);
+            add(i, t);
         return this;
     }
 
@@ -242,24 +265,13 @@ class Column<T> extends ArrayList<T> {
         return isEmpty() ? (initialiser == null ? null : initialiser) : get(size()-1);
     }
 
-    public void setFormula(Formula<T> formula) {
+    private void setFormula(Formula<T> formula) {
         this.formula = formula;
     }
 }
 
-abstract class Formula<T> {
-
-    Column column;
-
-    protected Formula(Column column) {
-        this.column = column;
-    }
-
-    abstract T func();
-//
-//    T value(Column column) {
-//        return column.get(currentIndex);
-//    }
+interface Formula<T> {
+    T func();
 }
 
 
@@ -272,11 +284,11 @@ class ColumnDate extends Column<DateMidnight> {
     ColumnDate(ColumnType columnType, Collection<? extends DateMidnight> collection) {
         super(collection, columnType);
     }
-
-    ColumnDate(ColumnType columnType, FluentIterable<DateMidnight> dates) {
-        super(columnType);
-        addAll(dates.toImmutableList());
-    }
+//
+//    ColumnDate(ColumnType columnType, FluentIterable<DateMidnight> dates) {
+//        super(columnType);
+//        addAll(dates.toImmutableList());
+//    }
 
     @Override
     public ColumnDate fillAllWith(int lines, DateMidnight dateMidnight) {
@@ -293,10 +305,6 @@ class ColumnDouble extends Column<Double> {
 
     ColumnDouble(ColumnType columnType, Collection<? extends Double> collection) {
         super(collection, columnType);
-    }
-
-    ColumnDouble(ColumnType columnType, Formula<Double> formula) {
-        super(columnType, formula);
     }
 
     @Override
@@ -353,7 +361,7 @@ class ColumnGroup extends HashMap<ColumnType, Column> {
         F.flow(columns).each(new Worker<Column>() {
             @Override
             public void work(Column column) {
-                putColumn(column);
+                put(column.columnType, column);
             }
         });
     }
@@ -375,28 +383,12 @@ class ColumnGroup extends HashMap<ColumnType, Column> {
         return (ColumnDate)get(columnType);
     }
 
-    public int getMaxIndex() {
-        return F.flow(values()).reduce(new Reducer<Integer, Column>() {
-            @Override
-            public Integer reduce(Integer max, Column column) {
-                return column.size() > max ?  column.size() : max;
-            }
-        }, 0);
-    }
-
     public ColumnGroup map(Mapper<ColumnGroup, ColumnGroup> mapper) {
         return mapper.map(this);
     }
 
     public <A> A reduce(Reducer<A, ColumnGroup> reducer, A a) {
         return reducer.reduce(a, this);
-    }
-
-    public ColumnGroup calc() {
-        for (int i=0; i<getMaxIndex(); i++) {
-            Column col = get(i) // un truc ordonné bien sur !!!
-        }
-
     }
 }
 
