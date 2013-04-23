@@ -21,6 +21,10 @@ public class Sheet extends LinkedHashMap<String, Column> {
 
     Map<String, Object> staticsDatas = new HashMap<String, Object>();
 
+    Sheet(int nbLignes) {
+        addIntColumn(INDEX, Ranges.closedOpen(0, nbLignes).asSet(DiscreteDomains.integers()));
+    }
+
     Sheet(Column... columns) {
         F.flow(columns).each(new Worker<Column>() {
             @Override
@@ -38,7 +42,7 @@ public class Sheet extends LinkedHashMap<String, Column> {
     }
 
     public Sheet addIntColumn(String columnName, Formula<Integer> formula) {
-        put(columnName, new ColumnInteger(columnName, formula));
+        put(columnName, new ColumnInteger(columnName, formula).fillAllWith(intColumn(INDEX).size(), null));
         return this;
     }
 
@@ -48,55 +52,55 @@ public class Sheet extends LinkedHashMap<String, Column> {
     }
 
     public Sheet addDateColumn(String columnName, Formula<DateMidnight> formula) {
-        put(columnName, new ColumnDate(columnName, formula));
+        put(columnName, new ColumnDate(columnName, formula).fillAllWith(intColumn(INDEX).size(), null));
         return this;
     }
 
     public Sheet addDateColumn(String columnName, Collection<? extends DateMidnight> collection) {
-        put(columnName, new ColumnDate(columnName, collection));
+        put(columnName, new ColumnDate(columnName, collection).fillAllWith(intColumn(INDEX).size(), null));
         return this;
     }
 
     public Sheet addDoubleColumn(String columnName, Formula<Double> formula) {
-        put(columnName, new ColumnDouble(columnName, formula));
+        put(columnName, new ColumnDouble(columnName, formula).fillAllWith(intColumn(INDEX).size(), null));
         return this;
     }
 
     public Sheet addDoubleColumn(String columnName, Collection<? extends Double> collection) {
-        put(columnName, new ColumnDouble(columnName, collection));
+        put(columnName, new ColumnDouble(columnName, collection).fillAllWith(intColumn(INDEX).size(), null));
         return this;
     }
 
-    public ColumnInteger getColInteger(String columnName) {
+    public ColumnInteger intColumn(String columnName) {
         return (ColumnInteger)get(columnName);
     }
 
-    public ColumnDouble getColDouble(String columnName) {
+    public ColumnDouble doubleColumn(String columnName) {
         return (ColumnDouble)get(columnName);
     }
 
-    public ColumnDate getColDate(String columnName) {
+    public ColumnDate dateColumn(String columnName) {
         return (ColumnDate)get(columnName);
     }
 
-    public int getMaxIndex() {
-        return F.flow(values()).reduce(new Reducer<Integer, Column>() {
-            @Override
-            public Integer reduce(Integer max, Column column) {
-                return column.size() > max ?  column.size() : max;
-            }
-        }, 0);
-    }
+//    public int getMaxIndex() {
+//        return F.flow(values()).reduce(new Reducer<Integer, Column>() {
+//            @Override
+//            public Integer reduce(Integer max, Column column) {
+//                return column.size() > max ?  column.size() : max;
+//            }
+//        }, 0);
+//    }
 
-    public Integer intOfStatic(String name) {
+    public Integer intStatic(String name) {
         return (Integer)staticsDatas.get(name);
     }
 
-    public DateMidnight dateOfStatic(String name) {
+    public DateMidnight dateStatic(String name) {
         return (DateMidnight)staticsDatas.get(name);
     }
 
-    public Double doubleOfstatic(String name) {
+    public Double doubleStatic(String name) {
         return (Double)staticsDatas.get(name);
     }
 
@@ -109,12 +113,7 @@ public class Sheet extends LinkedHashMap<String, Column> {
     }
 
     public Sheet run() {
-        for (Column column : values()) {
-            if (column.getFormula() != null) {
-                column.fillAllWith(getColInteger(INDEX).size(), null);
-            }
-        }
-        for (Integer index : getColInteger(INDEX)) {
+        for (Integer index : intColumn(INDEX)) {
             for (Column column : values()) {
                 Formula formula = column.getFormula();
                 if (formula != null) {
@@ -124,21 +123,17 @@ public class Sheet extends LinkedHashMap<String, Column> {
                     else
                         column.set(index, formula.func());
                 }
-                //System.out.println("Column: " + column.name + " index : " + index + " datas : " + column);
             }
             //System.out.println(print());
         }
         return this;
     }
 
-    public Sheet addIndexColum(int nbLignes) {
-        addIntColumn(INDEX, Ranges.closedOpen(0, nbLignes).asSet(DiscreteDomains.integers()));
-        return this;
-    }
+
 
     public String print() {
         StringBuilder sb = new StringBuilder();
-        for (Integer index : getColInteger(INDEX)) {
+        for (Integer index : intColumn(INDEX)) {
             for (Column column : values()) {
                 sb.append(column.print(index)).append('|');
             }

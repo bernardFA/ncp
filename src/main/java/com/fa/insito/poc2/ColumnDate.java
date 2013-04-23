@@ -11,7 +11,7 @@ class ColumnDate extends Column<DateMidnight> {
         super(name);
     }
 
-    public ColumnDate(String name, Formula<DateMidnight> formula) {
+    public ColumnDate(String name, Formula<? extends DateMidnight> formula) {
         super(name, formula);
     }
 

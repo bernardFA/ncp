@@ -19,7 +19,7 @@ abstract class Column<T> extends ArrayList<T> {
         addAll(collection);
     }
 
-    public Column(String name, Formula<T> formula) {
+    public Column(String name, Formula<? extends T> formula) {
         this.name = name;
         this.formula = formula;
     }

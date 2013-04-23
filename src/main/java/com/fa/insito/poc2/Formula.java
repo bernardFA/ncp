@@ -42,39 +42,39 @@ abstract class Formula<T> {
     }
 
     Integer intOfColumn(String columnName) {
-        return sheet.getColInteger(columnName).get(currentIndex);
+        return sheet.intColumn(columnName).get(currentIndex);
     }
 
     Integer getBeforeIntCell(String columnName) {
-        return sheet.getColInteger(columnName).getBefore(currentIndex);
+        return sheet.intColumn(columnName).getBefore(currentIndex);
     }
 
-    DateMidnight dateOfColumn(String columnName) {
-        return sheet.getColDate(columnName).get(currentIndex);
+    DateMidnight dateCell(String columnName) {
+        return sheet.dateColumn(columnName).get(currentIndex);
     }
 
     DateMidnight lastDateOfColumn(String columnName) {
-        return sheet.getColDate(columnName).getBefore(currentIndex);
+        return sheet.dateColumn(columnName).getBefore(currentIndex);
     }
 
-    Double doubleOfColumn(String columnName) {
-        return sheet.getColDouble(columnName).get(currentIndex);
+    Double doubleCell(String columnName) {
+        return sheet.doubleColumn(columnName).get(currentIndex);
     }
 
-    Double lastDoubleOfColumn(String columnName) {
-        return sheet.getColDouble(columnName).getBefore(currentIndex);
+    Double doubleLastCell(String columnName) {
+        return sheet.doubleColumn(columnName).getBefore(currentIndex);
     }
 
-    Integer intOfStatic(String name) {
-        return sheet.intOfStatic(name);
+    Integer intStatic(String name) {
+        return sheet.intStatic(name);
     }
 
-    DateMidnight getStaticDate(String name) {
-        return sheet.dateOfStatic(name);
+    DateMidnight dateStatic(String name) {
+        return sheet.dateStatic(name);
     }
 
-    Double doubleOfstatic(String name) {
-        return sheet.doubleOfstatic(name);
+    Double doubleStatic(String name) {
+        return sheet.doubleStatic(name);
     }
 
 

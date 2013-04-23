@@ -9,7 +9,6 @@ public class LeasingCalculator {
 
     public static final String INITIAL_AMOUNT = "Initial Amount";
     public static final String START_DATE = "Start Date";
-    public static final String PAY_FREQUENCY = "Pay Frequency";
     public static final String INTEREST_START = "Interest Start";
     public static final String INTEREST_END = "Interest End";
     public static final String PAYMENT_DATE = "Payment Date";
@@ -32,10 +31,10 @@ public class LeasingCalculator {
             @Override
             public Double map(Double rate) {
                 return calc(
-                        PaymentType.IN_ARREARS,
+                        PaymentType.IN_ADVANCE,
                         20,
                         new DateMidnight(2013, 1, 1),
-                        4,
+                        PaymentPeriodicity.QUARTERLY,
                         new Base30360(),
                         25000d,
                         1250d,
@@ -54,23 +53,21 @@ public class LeasingCalculator {
     Sheet calc(final PaymentType paymentType,
                            final int numberOfPeriods,
                            final DateMidnight startDate,
-                           final int payFrequency,
+                           final PaymentPeriodicity paymentPeriodicity,
                            final Base base,
                            final double initialAmount,
                            final double rent,
                            final double rate) {
 
-        Sheet sheet = new Sheet()
+        Sheet sheet = new Sheet(numberOfPeriods)
                 .withStatic(START_DATE, startDate)
-                .withStatic(PAY_FREQUENCY, payFrequency)
                 .withStatic(INITIAL_AMOUNT, initialAmount)
                 .withStatic(RATE, rate)
                 .withStatic(RENT, rent)
-                .addIndexColum(numberOfPeriods)
                 .addDateColumn(INTEREST_START, new Formula<DateMidnight>() {
                     @Override
                     DateMidnight funcFirst() {
-                        return sheet.dateOfStatic(START_DATE);
+                        return dateStatic(START_DATE);
                     }
 
                     @Override
@@ -81,60 +78,60 @@ public class LeasingCalculator {
                 .addDateColumn(INTEREST_END, new Formula<DateMidnight>() {
                     @Override
                     DateMidnight func() {
-                        return dateOfColumn(INTEREST_START).plusMonths(12 / intOfStatic(PAY_FREQUENCY));
+                        return paymentPeriodicity.nextDate(dateCell(INTEREST_START));
                     }
                 })
                 .addDateColumn(PAYMENT_DATE, new Formula<DateMidnight>() {
                     @Override
                     DateMidnight func() {
-                        return paymentType.paymentDate(dateOfColumn(INTEREST_START), dateOfColumn(INTEREST_END));
+                        return paymentType.paymentDate(dateCell(INTEREST_START), dateCell(INTEREST_END));
                     }
                 })
                 .addDoubleColumn(INTEREST_PERIOD, new Formula<Double>() {
                     @Override
                     Double func() {
-                        return base.calculateDaycountFraction(dateOfColumn(INTEREST_START), dateOfColumn(INTEREST_END));
+                        return base.calculateDaycountFraction(dateCell(INTEREST_START), dateCell(INTEREST_END));
                     }
                 })
                 .addDoubleColumn(OUTSTANDING, new Formula<Double>() {
                     @Override
                     Double funcFirst() {
-                        return doubleOfstatic(INITIAL_AMOUNT);
+                        return doubleStatic(INITIAL_AMOUNT);
                     }
 
                     @Override
                     Double func() {
-                        return lastDoubleOfColumn(CRD);
+                        return doubleLastCell(CRD);
                     }
                 })
                 .addDoubleColumn(RATE, new Formula<Double>() {
                     @Override
                     Double func() {
-                        return doubleOfstatic(RATE);
+                        return doubleStatic(RATE);
                     }
                 })
                 .addDoubleColumn(PAYMENT, new Formula<Double>() {
                     @Override
                     Double func() {
-                        return doubleOfstatic(RENT);
+                        return doubleStatic(RENT);
                     }
                 })
                 .addDoubleColumn(INTEREST, new Formula<Double>() {
                     @Override
                     Double func() {
-                        return doubleOfColumn(RATE) * doubleOfColumn(INTEREST_PERIOD) * doubleOfColumn(OUTSTANDING);
+                        return doubleCell(RATE) * doubleCell(INTEREST_PERIOD) * doubleCell(OUTSTANDING);
                     }
                 })
                 .addDoubleColumn(CAPITAL, new Formula<Double>() {
                     @Override
                     Double func() {
-                        return doubleOfColumn(PAYMENT) - doubleOfColumn(INTEREST);
+                        return doubleCell(PAYMENT) - doubleCell(INTEREST);
                     }
                 })
                 .addDoubleColumn(CRD, new Formula<Double>() {
                     @Override
                     Double func() {
-                        return doubleOfColumn(OUTSTANDING) - doubleOfColumn(CAPITAL);
+                        return doubleCell(OUTSTANDING) - doubleCell(CAPITAL);
                     }
                 });
        return sheet;
@@ -164,7 +161,7 @@ public class LeasingCalculator {
 
         @Override
         public Double reduce(Double initialAmount, Sheet sheet) {
-            return (sheet.getColDouble(CAPITAL).sum() + residualValue) - initialAmount;
+            return (sheet.doubleColumn(CAPITAL).sum() + residualValue) - initialAmount;
         }
 
     };

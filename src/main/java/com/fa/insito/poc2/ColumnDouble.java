@@ -13,7 +13,7 @@ class ColumnDouble extends Column<Double> {
         super(name, collection);
     }
 
-    public ColumnDouble(String name, Formula<Double> formula) {
+    public ColumnDouble(String name, Formula<? extends Double> formula) {
         super(name, formula);
     }
 
