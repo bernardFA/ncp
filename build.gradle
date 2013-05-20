@@ -14,5 +14,5 @@ dependencies {
     compile 'com.google.guava:guava:13.0.1'
     compile 'org.apache.tapestry:tapestry-func:5.3.6'
     compile 'org.jfin:datemath:1.0.1R'
-    testCompile 'junit:junit:4.+'
+    compile 'junit:junit:4.+'
 }

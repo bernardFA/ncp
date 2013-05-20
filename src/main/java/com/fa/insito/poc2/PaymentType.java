@@ -19,4 +19,5 @@ public enum PaymentType {
     };
 
     abstract DateMidnight paymentDate(DateMidnight start, DateMidnight end);
+
 }

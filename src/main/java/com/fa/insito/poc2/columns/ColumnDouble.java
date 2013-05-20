@@ -1,9 +1,9 @@
-package com.fa.insito.poc2;
+package com.fa.insito.poc2.columns;
 
 import java.util.Collection;
 
 
-class ColumnDouble extends Column<Double> {
+public class ColumnDouble extends Column<Double> {
 
     public ColumnDouble(String name) {
         super(name);
@@ -42,8 +42,8 @@ class ColumnDouble extends Column<Double> {
 
     public double sum() {
         double res = 0;
-        for (double dble : this)
-            res += dble;
+        for (double aDouble : this)
+            res += aDouble;
         return res;
     }
 }

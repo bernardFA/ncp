@@ -1,6 +1,8 @@
 package com.fa.insito.poc2;
 
 
+import com.fa.insito.poc2.columns.Formula;
+import com.fa.insito.poc2.columns.Sheet;
 import org.apache.tapestry5.func.Mapper;
 import org.apache.tapestry5.func.Reducer;
 import org.joda.time.DateMidnight;
@@ -14,6 +16,7 @@ public class LeasingCalculator {
     public static final String PAYMENT_DATE = "Payment Date";
     public static final String INTEREST_PERIOD = "Interest Period";
     public static final String OUTSTANDING = "Outstanding";
+    public static final String INTEREST_BASE_AMOUNT = "Interest Base Amount";
     public static final String CRD = "CRD";
     public static final String RATE = "Rate";
     public static final String INTEREST = "Interest";
@@ -30,34 +33,39 @@ public class LeasingCalculator {
         Mapper<Double, Double> leasingCalcul = new Mapper<Double, Double>() {
             @Override
             public Double map(Double rate) {
-                return calc(
+                Sheet sheet = calc(
                         PaymentType.IN_ADVANCE,
+                        InterestCalculationMode.on_crd_after_payment_minus_rent,
                         20,
                         new DateMidnight(2013, 1, 1),
                         PaymentPeriodicity.QUARTERLY,
-                        new Base30360(),
+                        new BaseExact360(),
                         25000d,
                         1250d,
                         rate)
-                    .run()
-                    .reduce(new ZeroReducer(2000d), 25000d);
+                    .run();
+                System.out.println(sheet.extract(PAYMENT_DATE, PAYMENT, RATE, CAPITAL, INTEREST, CRD).print());
+                return sheet.reduce(new ZeroReducer(2000d), 25000d);
             }
         };
 
         double rate = dichotomy(0.0d, 1.0d, 30, leasingCalcul);
-        System.out.println("RATE " + rate);
-        System.out.println("XLS  0,027892831712961");
+        System.out.println("ICI " + rate);
+       // System.out.println("XLS echu = 0,027892831712961");
+        System.out.println("PRO échoir = 0.030499");
+
 
     };
 
     Sheet calc(final PaymentType paymentType,
-                           final int numberOfPeriods,
-                           final DateMidnight startDate,
-                           final PaymentPeriodicity paymentPeriodicity,
-                           final Base base,
-                           final double initialAmount,
-                           final double rent,
-                           final double rate) {
+               final InterestCalculationMode interestCalculationMode,
+               final int numberOfPeriods,
+               final DateMidnight startDate,
+               final PaymentPeriodicity paymentPeriodicity,
+               final Base base,
+               final double initialAmount,
+               final double rent,
+               final double rate) {
 
         Sheet sheet = new Sheet(numberOfPeriods)
                 .withStatic(START_DATE, startDate)
@@ -66,79 +74,92 @@ public class LeasingCalculator {
                 .withStatic(RENT, rent)
                 .addDateColumn(INTEREST_START, new Formula<DateMidnight>() {
                     @Override
-                    DateMidnight funcFirst() {
+                    public DateMidnight funcFirst() {
                         return dateStatic(START_DATE);
                     }
 
                     @Override
-                    DateMidnight func() {
-                        return lastDateOfColumn(INTEREST_END);
+                    public DateMidnight func() {
+                        return dateLastCell(INTEREST_END);
                     }
                 })
                 .addDateColumn(INTEREST_END, new Formula<DateMidnight>() {
                     @Override
-                    DateMidnight func() {
+                    public DateMidnight func() {
                         return paymentPeriodicity.nextDate(dateCell(INTEREST_START));
                     }
                 })
                 .addDateColumn(PAYMENT_DATE, new Formula<DateMidnight>() {
                     @Override
-                    DateMidnight func() {
+                    public DateMidnight func() {
                         return paymentType.paymentDate(dateCell(INTEREST_START), dateCell(INTEREST_END));
                     }
                 })
                 .addDoubleColumn(INTEREST_PERIOD, new Formula<Double>() {
                     @Override
-                    Double func() {
+                    public Double funcFirst() {
+                        return paymentType == PaymentType.IN_ADVANCE ? 0d : func();
+                    }
+                    @Override
+                    public Double func() {
                         return base.calculateDaycountFraction(dateCell(INTEREST_START), dateCell(INTEREST_END));
                     }
                 })
                 .addDoubleColumn(OUTSTANDING, new Formula<Double>() {
                     @Override
-                    Double funcFirst() {
+                    public Double funcFirst() {
                         return doubleStatic(INITIAL_AMOUNT);
                     }
 
                     @Override
-                    Double func() {
+                    public Double func() {
                         return doubleLastCell(CRD);
                     }
                 })
                 .addDoubleColumn(RATE, new Formula<Double>() {
                     @Override
-                    Double func() {
+                    public Double func() {
                         return doubleStatic(RATE);
                     }
                 })
                 .addDoubleColumn(PAYMENT, new Formula<Double>() {
                     @Override
-                    Double func() {
+                    public Double func() {
                         return doubleStatic(RENT);
+                    }
+                })
+                .addDoubleColumn(INTEREST_BASE_AMOUNT, new Formula<Double>() {
+                    @Override
+                    public Double func() {
+                        if (paymentType == PaymentType.IN_ADVANCE)
+                            return interestCalculationMode.interestBaseAmount(doubleCell(OUTSTANDING), doubleCell(PAYMENT), doubleCell(CAPITAL));
+                        else
+                            return doubleCell(OUTSTANDING);
                     }
                 })
                 .addDoubleColumn(INTEREST, new Formula<Double>() {
                     @Override
-                    Double func() {
-                        return doubleCell(RATE) * doubleCell(INTEREST_PERIOD) * doubleCell(OUTSTANDING);
+                    public Double func() {
+                        return doubleCell(RATE) * doubleCell(INTEREST_PERIOD) * doubleCell(INTEREST_BASE_AMOUNT);
                     }
                 })
                 .addDoubleColumn(CAPITAL, new Formula<Double>() {
                     @Override
-                    Double func() {
+                    public Double func() {
                         return doubleCell(PAYMENT) - doubleCell(INTEREST);
                     }
                 })
                 .addDoubleColumn(CRD, new Formula<Double>() {
                     @Override
-                    Double func() {
+                    public Double func() {
                         return doubleCell(OUTSTANDING) - doubleCell(CAPITAL);
                     }
                 });
        return sheet;
     }
 
-    Double dichotomy(double up, double down, int nbIter, Mapper<Double, Double> function) {
-        Double mid = null;
+    double dichotomy(double up, double down, int nbIter, Mapper<Double, Double> function) {
+        double mid = up+up; /* crazy value */
         for (int i=0; i<nbIter; i++) {
             mid = (up+down)/2;
             double zeroTarget = function.map(mid);

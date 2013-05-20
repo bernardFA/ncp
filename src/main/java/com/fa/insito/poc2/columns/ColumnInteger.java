@@ -1,4 +1,4 @@
-package com.fa.insito.poc2;
+package com.fa.insito.poc2.columns;
 
 import java.util.Collection;
 

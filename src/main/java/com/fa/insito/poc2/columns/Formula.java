@@ -1,15 +1,15 @@
-package com.fa.insito.poc2;
+package com.fa.insito.poc2.columns;
 
 
 import org.joda.time.DateMidnight;
 
-abstract class Formula<T> {
+public abstract class Formula<T> {
 
     protected Sheet sheet;
     protected Column<T> column;
     protected int currentIndex;
 
-    /* context injection by engine */
+    /* calcul context injection by calc engine */
     public void setContext(Sheet sheet, Column column, Integer index) {
         this.sheet = sheet;
         this.column = column;
@@ -29,53 +29,46 @@ abstract class Formula<T> {
     }
 
     /* default implem */
-    T funcFirst() {
+    public T funcFirst() {
         return func();
     }
 
-    abstract T func();
+    public abstract T func();
 
-    /* Tools */
 
-    T before() {
-        return column.getBefore(currentIndex);
-    }
-
-    Integer intOfColumn(String columnName) {
+    public Integer intCell(String columnName) {
         return sheet.intColumn(columnName).get(currentIndex);
     }
 
-    Integer getBeforeIntCell(String columnName) {
+    public Integer intLastCell(String columnName) {
         return sheet.intColumn(columnName).getBefore(currentIndex);
     }
 
-    DateMidnight dateCell(String columnName) {
+    public DateMidnight dateCell(String columnName) {
         return sheet.dateColumn(columnName).get(currentIndex);
     }
 
-    DateMidnight lastDateOfColumn(String columnName) {
+    public DateMidnight dateLastCell(String columnName) {
         return sheet.dateColumn(columnName).getBefore(currentIndex);
     }
 
-    Double doubleCell(String columnName) {
+    public Double doubleCell(String columnName) {
         return sheet.doubleColumn(columnName).get(currentIndex);
     }
 
-    Double doubleLastCell(String columnName) {
+    public Double doubleLastCell(String columnName) {
         return sheet.doubleColumn(columnName).getBefore(currentIndex);
     }
 
-    Integer intStatic(String name) {
+    public Integer intStatic(String name) {
         return sheet.intStatic(name);
     }
 
-    DateMidnight dateStatic(String name) {
+    public DateMidnight dateStatic(String name) {
         return sheet.dateStatic(name);
     }
 
-    Double doubleStatic(String name) {
+    public Double doubleStatic(String name) {
         return sheet.doubleStatic(name);
     }
-
-
 }

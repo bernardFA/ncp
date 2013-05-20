@@ -1,4 +1,4 @@
-package com.fa.insito.poc2;
+package com.fa.insito.poc2.columns;
 
 
 import com.google.common.collect.DiscreteDomains;
@@ -9,10 +9,7 @@ import org.apache.tapestry5.func.Reducer;
 import org.apache.tapestry5.func.Worker;
 import org.joda.time.DateMidnight;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 
 public class Sheet extends LinkedHashMap<String, Column> {
@@ -21,11 +18,11 @@ public class Sheet extends LinkedHashMap<String, Column> {
 
     Map<String, Object> staticsDatas = new HashMap<String, Object>();
 
-    Sheet(int nbLignes) {
+    public Sheet(int nbLignes) {
         addIntColumn(INDEX, Ranges.closedOpen(0, nbLignes).asSet(DiscreteDomains.integers()));
     }
 
-    Sheet(Column... columns) {
+    public Sheet(Column... columns) {
         F.flow(columns).each(new Worker<Column>() {
             @Override
             public void work(Column column) {
@@ -38,6 +35,11 @@ public class Sheet extends LinkedHashMap<String, Column> {
         if (staticsDatas.get(name) != null)
             throw new IllegalArgumentException("the static data " + name + " already exist in the sheet");
         staticsDatas.put(name, data);
+        return this;
+    }
+
+    private Sheet addColumn(Column column) {
+        put(column.getName(), column);
         return this;
     }
 
@@ -83,6 +85,10 @@ public class Sheet extends LinkedHashMap<String, Column> {
         return (ColumnDate)get(columnName);
     }
 
+    public Column getColumn(String columnName) {
+        return get(columnName);
+    }
+
 //    public int getMaxIndex() {
 //        return F.flow(values()).reduce(new Reducer<Integer, Column>() {
 //            @Override
@@ -112,6 +118,9 @@ public class Sheet extends LinkedHashMap<String, Column> {
         return reducer.reduce(a, this);
     }
 
+    /**
+     * the calc engine
+     */
     public Sheet run() {
         for (Integer index : intColumn(INDEX)) {
             for (Column column : values()) {
@@ -141,4 +150,16 @@ public class Sheet extends LinkedHashMap<String, Column> {
         }
         return sb.toString();
     }
+
+    public Sheet extract(String... columnNames) {
+        final Sheet sheet = new Sheet(intColumn(INDEX).size());
+        F.flow(columnNames).each(new Worker<String>() {
+            @Override
+            public void work(String columnName) {
+                sheet.addColumn(getColumn(columnName));
+            }
+        });
+        return sheet;
+    }
+
 }
