@@ -6,6 +6,7 @@ import com.google.common.collect.Maps;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -15,39 +16,45 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class StateEngine {
 
     private Map<String,State> states = Maps.newHashMap();
-    private List<Trans> transes = Lists.newArrayList();
     private State initialState;
-
     private State currentState;
     private List<StateChangeListener> stateChangeListeners = Lists.newArrayList();
 
-    protected StateEngine (String initialStateName, Transition... transitions) {
-        // create states and build the engine references
+    public StateEngine (State initialState, Transition... transitions) {
+        // reference states and build the engine references
+        checkNotNull(transitions);
         for (Transition transition: transitions) {
-            State from = states.get(transition.fromState);
+            State from = states.get(transition.getFrom().getName());
             if (from == null) {
-                from = new State(transition.fromState);
+                from = transition.getFrom();
                 states.put(from.getName(), from);
             }
-            State to = states.get(transition.toState);
+            from.addTransition(transition);
+            State to = states.get(transition.getTo().getName());
             if (to == null) {
-                to = new State(transition.toState);
+                to = transition.getTo();
                 states.put(to.getName(), to);
             }
-            Trans trans = new Trans(from, transition.token, to);
-            from.addTransition(trans);
         }
         // initialize the stateEngine
-        initialState = states.get(initialStateName);
-        checkArgument(initialState != null, "bad initial state : " + initialStateName + " doesnt exist");
+        checkNotNull(initialState);
+        checkArgument(states.get(initialState.getName()) != null, "bad initial state : " + initialState + " doesnt exist in this stateengine");
+        this.initialState = initialState;
+    }
+
+    public void init() {
         changeState(initialState, null);
+    }
+
+    public synchronized void onToken(String token) {
+        onToken(new StateEvent(token));
     }
 
     protected synchronized void onToken(StateEvent stateEvent) {
         checkNotNull(stateEvent);
         checkNotNull(stateEvent.getToken());
         State nextState = currentState.getNextState(stateEvent.getToken());
-        if (nextState  != null)
+        if (nextState != null)
             changeState(nextState, stateEvent);
     }
 
@@ -84,17 +91,15 @@ public class StateEngine {
         stateChangeListeners.add(stateChangeListener);
     }
 
-    public static class Transition {
-
-        String fromState;
-        String toState;
-        String token;
-
-        public Transition(String fromState, String token, String toState) {
-            this.token = token;
-            this.fromState = fromState;
-            this.toState = toState;
-        }
-
+    public Collection<Transition> getPossibleTransitions() {
+        return getCurrentState().getNextTransitions();
     }
+
+    public void forceState(String stateName) {
+        State state2Force = states.get(stateName);
+        if (state2Force == null)
+            throw new IllegalArgumentException("state " + stateName + " doesn't exist");
+        currentState = state2Force;
+    }
+
 }
