@@ -86,7 +86,7 @@ public class Ansible extends BaseEntity {
     }
 
     EndPointSet fetHE() {
-        return endPoints.union(sons.fetHE());
+        return new EndPointSet(endPoints).union(sons.fetHE());
     }
 
     MessageSet fetM(int numberOfMessages) {
