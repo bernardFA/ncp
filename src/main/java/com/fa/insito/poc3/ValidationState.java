@@ -1,5 +1,9 @@
-package com.fa.insito.stateengine;
+package com.fa.insito.poc3;
 
+
+import com.fa.insito.poc3.stateengine.State;
+import com.fa.insito.poc3.stateengine.StateEngine;
+import com.fa.insito.poc3.stateengine.Transition;
 
 public class ValidationState extends StateEngine {
 

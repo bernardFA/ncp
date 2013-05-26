@@ -6,7 +6,12 @@ import java.util.Iterator;
 
 public class EndPointSet extends HashSet<EndPoint> {
 
+    public EndPointSet() {
+        super();
+    }
+
     public EndPointSet(EndPointSet endPoints) {
+	    super();
         for (EndPoint endPoint : endPoints)
             add(endPoint);
     }
