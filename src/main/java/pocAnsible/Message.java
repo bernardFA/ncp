@@ -1,4 +1,4 @@
-package domain;
+package pocAnsible;
 
 import org.joda.time.DateTime;
 

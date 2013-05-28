@@ -2,7 +2,7 @@
     "product family" : "leasing",
     "calculator" : [
 
-        "loan in arrears", {
+        "Leasing in arrears", {
             "input" : {
                 "currency" : "EUR",
                 "base" : "base_30360",
@@ -14,7 +14,7 @@
                 "rate" : 0.25,
                 "start date" : "2013-03-01",
             },
-            "output" :  ["CAPITAL", "INTEREST"]
+            "output" :  ["PAYMENT_DATE", "CAPITAL", "INTEREST"]
         },
     ]
 }

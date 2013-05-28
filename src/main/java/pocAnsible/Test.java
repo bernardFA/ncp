@@ -1,6 +1,4 @@
-package domain;
-
-import java.security.SecureRandom;
+package pocAnsible;
 
 public class Test {
 

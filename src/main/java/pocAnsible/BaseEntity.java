@@ -1,4 +1,4 @@
-package domain;
+package pocAnsible;
 
 import java.io.Serializable;
 import java.security.SecureRandom;

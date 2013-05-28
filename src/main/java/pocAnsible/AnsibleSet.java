@@ -1,4 +1,4 @@
-package domain;
+package pocAnsible;
 
 import java.util.HashSet;
 

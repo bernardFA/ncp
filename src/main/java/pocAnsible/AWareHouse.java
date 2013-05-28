@@ -1,4 +1,4 @@
-package domain;
+package pocAnsible;
 
 
 public class AWareHouse {

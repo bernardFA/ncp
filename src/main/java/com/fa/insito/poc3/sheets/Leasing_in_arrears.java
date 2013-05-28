@@ -65,7 +65,7 @@ public class Leasing_in_arrears extends Sheet {
         initialAmount = (Double)input.get(INITIAL_AMOUNT);
         rent = (Double)input.get(RENT);
         rate = (Double)input.get(RATE_);
-        startDate = new DateMidnight(); //DateMidnight.parse((String)input.get(START_DATE));
+        startDate = new DateMidnight(); //fmt.parse((String)input.get(START_DATE));
 
         addDateColumn(INTEREST_START, new Formula<DateMidnight>() {
             @Override
