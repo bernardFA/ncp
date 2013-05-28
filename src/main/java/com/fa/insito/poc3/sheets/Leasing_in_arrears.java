@@ -1,6 +1,10 @@
-package com.fa.insito.poc3;
+package com.fa.insito.poc3.sheets;
 
 
+import com.fa.insito.poc3.Base;
+import com.fa.insito.poc3.Flow;
+import com.fa.insito.poc3.FlowSet;
+import com.fa.insito.poc3.PaymentPeriodicity;
 import com.fa.insito.poc3.sheetengine.Formula;
 import com.fa.insito.poc3.sheetengine.Sheet;
 import org.joda.time.DateMidnight;
@@ -8,10 +12,10 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
 import java.util.Currency;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-public class Leasing_inArrearsCalculator extends Sheet {
+public class Leasing_in_arrears extends Sheet {
 
     public static final String CURRENCY = "currency";
     private Currency currency;
@@ -27,9 +31,6 @@ public class Leasing_inArrearsCalculator extends Sheet {
 
     public static final String INITIAL_AMOUNT = "initial amount";
     private double initialAmount;
-
-    public static final String RESIDUAL_VALUE = "residual value";
-    private double residualValue;
 
     public static final String RENT = "rent";
     private double rent;
@@ -55,14 +56,13 @@ public class Leasing_inArrearsCalculator extends Sheet {
 
     private static DateTimeFormatter fmt = DateTimeFormat.forPattern("yyyy-MM-dd");
 
-    public Sheet prepare(Map input) {
+    public Sheet prepareData(Map input) {
 
-        currency = Currency.getInstance((String)input.get(CURRENCY));
+        currency = Currency.getInstance((String) input.get(CURRENCY));
         base = Base.valueOf((String)input.get(BASE));
         paymentPeriodicity = PaymentPeriodicity.valueOf((String)input.get(PAYMENT_PERIODICITY));
         numberOfPeriod = (Long)input.get(NUMBER_OF_PERIOD);
         initialAmount = (Double)input.get(INITIAL_AMOUNT);
-        residualValue = (Double)input.get(RESIDUAL_VALUE);
         rent = (Double)input.get(RENT);
         rate = (Double)input.get(RATE_);
         startDate = new DateMidnight(); //DateMidnight.parse((String)input.get(START_DATE));
@@ -140,7 +140,7 @@ public class Leasing_inArrearsCalculator extends Sheet {
     }
 
     @Override
-    public FlowSet extractFlows(List<String> output) {
+    public FlowSet extractFlows(Set<String> output) {
         FlowSet flows = new FlowSet();
         for (String colName : output) {
             flows.union(createFlow(Flow.Type.valueOf(colName), PAYMENT_DATE, colName));

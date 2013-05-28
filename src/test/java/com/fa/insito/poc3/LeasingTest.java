@@ -12,18 +12,13 @@ public class LeasingTest {
     public void testSimpleLeasing() {
 
         String spec = isToString(this.getClass().getClassLoader().getResourceAsStream("com/fa/insito/poc3/Sample CB Loyer Constant Type1.json"));
-        Product p = new Product(new Specification(spec));
+        Product p = new Product(spec);
         p.initializeProduct();
 
         for (Flow flow : p.getFlows())
             System.out.println(flow);
 
     }
-
-
-
-
-
 
 
     private static String isToString(InputStream is) {

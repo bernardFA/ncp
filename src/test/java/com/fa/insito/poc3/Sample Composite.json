@@ -1,8 +1,8 @@
 {
-    "product family" : "leasing",
+    "product family" : "loan",
     "calculator" : [
-
-        "loan in arrears", {
+        {
+            "name" : "simple loan",
             "input" : {
                 "currency" : "EUR",
                 "base" : "base_30360",
@@ -14,7 +14,14 @@
                 "rate" : 0.25,
                 "start date" : "2013-03-01",
             },
-            "output" :  ["CAPITAL", "INTEREST"]
+            "output" :  ["PAYMENT_DATE", "CAPITAL", "INTEREST"]
+        },
+        {
+            "name" : "fees on interest percent",
+            "input" : {
+                "fees on interest" : 0.01,
+            },
+            "output" :  ["PAYMENT_DATE", "CAPITAL", "INTEREST"]
         },
     ]
 }

@@ -3,27 +3,25 @@ package com.fa.insito.poc3;
 // TODO : change to a composite structure to add behevior
 public class Product {
 
-    private Specification specification;
+    private String specification;
 
     private FlowSet flows;
 
     private LiveCycleState liveCycleState;
     private ValidationState validationState;
 
-    public Product(Specification specification) {
+    public Product(String specification) {
         this.specification = specification;
         this.liveCycleState = new LiveCycleState();
     }
 
     // management
 
-    // action initialise product
+    // action initialise product (a sortir et mettre dans action)
     public void initializeProduct() {
-        flows = SheetWareHouse.getSheet(specification.getName())
-                .prepare(specification.getInput())
-                .calculate()
-                .extractFlows(specification.getOutput());
+        flows = new Calculator(specification).calculate();
     }
+
 
     public FlowSet getFlows() {
         return flows;

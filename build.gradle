@@ -5,7 +5,7 @@ repositories {
 
     // local repo for datemath
     maven {
-        url "/Users/blaurant/.m2/repository"
+        url "/Users/bernard/.m2/repository"
     }
 }
 

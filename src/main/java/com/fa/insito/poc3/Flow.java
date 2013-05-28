@@ -7,7 +7,7 @@ import java.util.Currency;
 
 public class Flow {
 
-    enum Type { INTEREST, CAPITAL }
+    public enum Type { INTEREST, CAPITAL, FEE }
 
     private Type type;
     private Currency currency;

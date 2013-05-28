@@ -1,7 +1,7 @@
 package com.fa.insito.poc3.sheetengine;
 
-
 import com.fa.insito.poc3.FlowSet;
+import com.google.common.collect.Sets;
 import org.apache.tapestry5.func.F;
 import org.apache.tapestry5.func.Mapper;
 import org.apache.tapestry5.func.Reducer;
@@ -10,8 +10,8 @@ import org.joda.time.DateMidnight;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 
 public abstract class Sheet extends LinkedHashMap<String, Column> {
@@ -26,6 +26,16 @@ public abstract class Sheet extends LinkedHashMap<String, Column> {
                 put(column.getName(), column);
             }
         });
+    }
+
+    private Sheet addColumns(Set<Column> columns) {
+        F.flow(columns).each(new Worker<Column>() {
+            @Override
+            public void work(Column column) {
+                put(column.getName(), column);
+            }
+        });
+        return this;
     }
 
     private Sheet addColumn(Column column) {
@@ -87,13 +97,15 @@ public abstract class Sheet extends LinkedHashMap<String, Column> {
         return reducer.reduce(a, this);
     }
 
-    public abstract Sheet prepare(Map input);
-    protected abstract boolean stopCondition();
+    public Sheet prepareColumn(Set<Column> columns) {
+        addColumns(columns);
+        return this;
+    }
 
-    public abstract FlowSet extractFlows(List<String> output);
+    public abstract Sheet prepareData(Map input);
 
     /**
-     * the calc engine
+     * the calc engine at the sheet level
      */
     public Sheet calculate() {
         int index = 0;
@@ -105,6 +117,18 @@ public abstract class Sheet extends LinkedHashMap<String, Column> {
         return this;
     }
 
+    protected abstract boolean stopCondition();
+
+    public Set<Column> extractColumn(Set<String> output) {
+        Set<Column> res = Sets.newHashSet();
+        for (String colName : output)
+            res.add(getColumn(colName));
+        return res;
+    }
+
+    public abstract FlowSet extractFlows(Set<String> output);
+
+
     private void addLine(int index) {
         for (Column column : values())
             column.fillWith(index, null);
@@ -114,7 +138,7 @@ public abstract class Sheet extends LinkedHashMap<String, Column> {
         for (Column column : values()) {
             Formula formula = column.getFormula();
             if (formula != null) {
-                formula.setContext(Sheet.this, column, index);
+                formula.setContext(this, column, index);
                 if (index==0)
                     column.set(0, formula.funcFirst());
                 else
