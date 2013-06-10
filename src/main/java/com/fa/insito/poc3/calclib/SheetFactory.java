@@ -1,21 +1,21 @@
-package com.fa.insito.poc3;
+package com.fa.insito.poc3.calclib;
 
 
-import com.fa.insito.poc3.sheetengine.Sheet;
-import com.fa.insito.poc3.sheets.Leasing_in_arrears;
+import com.fa.insito.poc3.calcengine.Sheet;
 import com.google.common.collect.ImmutableMap;
 
-public class SheetWareHouse {
+public class SheetFactory {
 
     static final ImmutableMap<String, Class> sheets =
             new ImmutableMap.Builder<String, Class>()
-                    .put("Leasing in arrears", Leasing_in_arrears.class)
+                    .put("Loan Fixed Rate", LoanFixedRate.class)
+                    .put("Flow Extraction", MoneyMoveExtraction.class)
                     .build();
 
-    public static Sheet getInstance(Object name) {
+    public static Sheet newSheet(String name) {
         Class sheetType = sheets.get(name);
         if (sheetType == null)
-            throw new IllegalArgumentException("sheet " + name + " doesn't exist in warehouse");
+            throw new IllegalArgumentException("sheet " + name + " doesn't exist in factory");
         try {
             return (Sheet) sheetType.newInstance();
         } catch (InstantiationException e) {

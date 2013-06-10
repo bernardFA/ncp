@@ -16,4 +16,5 @@ dependencies {
     compile 'org.jfin:jFin_DateMath:R1.0.1'
     compile 'com.googlecode.json-simple:json-simple:1.1.1'
     compile 'junit:junit:4.+'
+    compile 'com.googlecode.cqengine:cqengine:1.0.3'
 }

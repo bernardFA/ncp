@@ -1,6 +1,9 @@
-package com.fa.insito.poc3.sheetengine;
+package com.fa.insito.poc3.calcengine;
 
-import com.fa.insito.poc3.FlowSet;
+import com.fa.insito.poc3.MoneyMove;
+import com.fa.insito.poc3.MoneyMoveSet;
+import com.fa.insito.poc3.MoveItem;
+import com.fa.insito.poc3.ProductSpec;
 import com.google.common.collect.Sets;
 import org.apache.tapestry5.func.F;
 import org.apache.tapestry5.func.Mapper;
@@ -8,10 +11,7 @@ import org.apache.tapestry5.func.Reducer;
 import org.apache.tapestry5.func.Worker;
 import org.joda.time.DateMidnight;
 
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 
 public abstract class Sheet extends LinkedHashMap<String, Column> {
@@ -102,7 +102,7 @@ public abstract class Sheet extends LinkedHashMap<String, Column> {
         return this;
     }
 
-    public abstract Sheet prepareData(Map input);
+    public abstract Sheet prepareData(ProductSpec productSpec);
 
     /**
      * the calc engine at the sheet level
@@ -119,15 +119,12 @@ public abstract class Sheet extends LinkedHashMap<String, Column> {
 
     protected abstract boolean stopCondition();
 
-    public Set<Column> extractColumn(Set<String> output) {
+    public Set<Column> extractColumn(List<String> output) {
         Set<Column> res = Sets.newHashSet();
         for (String colName : output)
             res.add(getColumn(colName));
         return res;
     }
-
-    public abstract FlowSet extractFlows(Set<String> output);
-
 
     private void addLine(int index) {
         for (Column column : values())
@@ -147,8 +144,21 @@ public abstract class Sheet extends LinkedHashMap<String, Column> {
         }
     }
 
-    /*
 
+    public MoneyMoveSet extractFlows(ProductSpec productSpec) {
+        // TODO : rajouter les autres type de flux
+        List<String> colNames = productSpec.get("PAYMENT");
+        return extractPaymentFlows(dateColumn(colNames.get(0)), doubleColumn(colNames.get(1)), doubleColumn(colNames.get(2)), doubleColumn(colNames.get(3)));
+    }
+
+    public MoneyMoveSet extractPaymentFlows(ColumnDate paymentDates, ColumnDouble capitals, ColumnDouble interests, ColumnDouble fees) {
+        MoneyMoveSet flows = new MoneyMoveSet();
+        for (int line=0; line<paymentDates.size(); line++) {
+            MoveItem moveItem = new MoveItem(capitals.get(line), interests.get(line), fees.get(line));
+            flows.add(new MoneyMove(MoneyMove.Type.PAYMENT, paymentDates.get(line), Sets.newHashSet(moveItem)));
+        }
+        return flows;
+    }
 
 //    public int getMaxIndex() {
 //        return F.flow(values()).reduce(new Reducer<Integer, Column>() {

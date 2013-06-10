@@ -1,0 +1,39 @@
+{
+    "product family" : "leasing",
+
+    "calculator" : "MultiSheetCalculator",
+
+    "specs" : [
+        {
+            "sheet" : "Leasing in advance",
+            "input" : {
+                // decalage du debut de payment
+                "currency" : "EUR",
+                "base" : "base_30360",
+                "flow periodicity" : "MONTHLY",
+                "number of period" : 20,
+                "initial amount" : 25000.00,
+                "residual value" : 2000.00,
+                "rent" : 1250.00,
+                "rate" : 0.25,
+                "start dateValue" : "2013-03-01",
+            },
+            "output" : ["PAYMENT_DATE", "CAPITAL", "INTEREST"]
+        },
+        {
+            "sheet" : "Swap",
+            "input" : {
+                "currency" : "EUR",
+                'amount" : 25000.00,
+                "base" : "base_30360",
+                "flow periodicity" : "QUARTERLY",
+                "flow shift" : "1M",
+                "index" : "EURIBOR 1M",
+                "spread" : "10",
+                "start dateValue" : "2013-03-01",
+            },
+            "output" : ["PAYMENT_DATE", "CAPITAL", "INTEREST"]
+        }
+
+    ]
+}

@@ -1,0 +1,29 @@
+{
+    "product family" : "loan",
+
+    "calculator" : "MultiSheetCalculator",
+
+    "specs" : [
+        {
+            "name" : "Loan Fixed Rate",
+            "input" : {
+                "currency" : "EUR",
+                "base" : "base_30360",
+                "payment periodicity" : "MONTHLY",
+                "number of period" : 12,
+                "borrowed capital" : 256145.50,
+                "fixed 	payoff" : 20000.00,
+                "rate" : 3.00,
+                "start dateValue" : "2013-01-01"
+            },
+            "output" :  ["PAYMENT_DATE", "CAPITAL", "INTEREST"]
+        }
+        {
+            "name" : "Flow Extraction",
+            "output" : {
+                "PAYMENT" :  ["PAYMENT_DATE", "CAPITAL", "INTEREST"]
+            }
+        }
+    ]
+
+}

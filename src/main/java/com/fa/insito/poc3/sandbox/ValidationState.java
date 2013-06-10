@@ -1,4 +1,4 @@
-package com.fa.insito.poc3;
+package com.fa.insito.poc3.sandbox;
 
 
 import com.fa.insito.poc3.stateengine.State;

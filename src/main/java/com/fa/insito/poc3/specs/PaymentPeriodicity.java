@@ -1,4 +1,4 @@
-package com.fa.insito.poc3;
+package com.fa.insito.poc3.specs;
 
 import org.joda.time.DateMidnight;
 import org.joda.time.Period;

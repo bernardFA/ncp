@@ -1,4 +1,4 @@
-package com.fa.insito.poc3;
+package com.fa.insito.poc3.specs;
 
 import org.jfin.date.daycount.DaycountCalculator;
 import org.jfin.date.daycount.DaycountCalculatorFactory;

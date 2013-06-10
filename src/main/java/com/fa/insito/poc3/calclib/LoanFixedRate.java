@@ -1,21 +1,20 @@
-package com.fa.insito.poc3.sheets;
+package com.fa.insito.poc3.calclib;
 
 
-import com.fa.insito.poc3.Base;
-import com.fa.insito.poc3.Flow;
-import com.fa.insito.poc3.FlowSet;
-import com.fa.insito.poc3.PaymentPeriodicity;
-import com.fa.insito.poc3.sheetengine.Formula;
-import com.fa.insito.poc3.sheetengine.Sheet;
+import com.fa.insito.poc3.MoneyMoveSet;
+import com.fa.insito.poc3.ProductSpec;
+import com.fa.insito.poc3.calcengine.Formula;
+import com.fa.insito.poc3.calcengine.Sheet;
+import com.fa.insito.poc3.specs.Base;
+import com.fa.insito.poc3.specs.PaymentPeriodicity;
 import org.joda.time.DateMidnight;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
 import java.util.Currency;
 import java.util.Map;
-import java.util.Set;
 
-public class Leasing_in_arrears extends Sheet {
+public class LoanFixedRate extends Sheet {
 
     public static final String CURRENCY = "currency";
     private Currency currency;
@@ -56,16 +55,17 @@ public class Leasing_in_arrears extends Sheet {
 
     private static DateTimeFormatter fmt = DateTimeFormat.forPattern("yyyy-MM-dd");
 
-    public Sheet prepareData(Map input) {
+    public Sheet prepareData(ProductSpec productSpec) {
 
-        currency = Currency.getInstance((String) input.get(CURRENCY));
-        base = Base.valueOf((String)input.get(BASE));
-        paymentPeriodicity = PaymentPeriodicity.valueOf((String)input.get(PAYMENT_PERIODICITY));
-        numberOfPeriod = (Long)input.get(NUMBER_OF_PERIOD);
-        initialAmount = (Double)input.get(INITIAL_AMOUNT);
-        rent = (Double)input.get(RENT);
-        rate = (Double)input.get(RATE_);
-        startDate = new DateMidnight(); //fmt.parse((String)input.get(START_DATE));
+        StandardLoanSpec spec = (StandardLoanSpec)productSpec;
+        currency = spec.getCurrency();//Currency.getInstance((String) productSpec.get(CURRENCY));
+        base = spec.getBase(); //Base.valueOf((String)productSpec.get(BASE));
+        paymentPeriodicity = spec.paymentPeriodicity();   //getPayPaymentPeriodicity.valueOf((String)productSpec.get(PAYMENT_PERIODICITY));
+        numberOfPeriod = spec.getNumberOfPeriod(); //(Long)productSpec.get(NUMBER_OF_PERIOD);
+        initialAmount = spec.getInitialAmount(); //(Double)productSpec.get(INITIAL_AMOUNT);
+        rent = spec.getRent();//(Double)productSpec.get(RENT);
+        rate = spec.getRate();//(Double)productSpec.get(RATE_);
+        startDate = spec.getStartDate(); new DateMidnight(); //fmt.parse((String)input.get(START_DATE));
 
         addDateColumn(INTEREST_START, new Formula<DateMidnight>() {
             @Override
@@ -140,25 +140,14 @@ public class Leasing_in_arrears extends Sheet {
     }
 
     @Override
-    public FlowSet extractFlows(Set<String> output) {
-        FlowSet flows = new FlowSet();
-        for (String colName : output) {
-            flows.union(createFlow(Flow.Type.valueOf(colName), PAYMENT_DATE, colName));
-        }
-        return flows;
-    }
-
-    private FlowSet createFlow(Flow.Type flowType, String colDateName, String colAmountName) {
-        FlowSet flows = new FlowSet();
-        for (int line=0; line<dateColumn(colDateName).size(); line++)
-            flows.add(new Flow(flowType, currency, dateColumn(colDateName).get(line), doubleColumn(colAmountName).get(line)));
-        return flows;
-    }
-
-    @Override
     protected boolean stopCondition() {
         Double crd = doubleColumn(CRD).last();
         return crd == null ? true : crd == 0;
+    }
+
+    @Override
+    public MoneyMoveSet extractFlows(Map output) {
+        return null;
     }
 
 }

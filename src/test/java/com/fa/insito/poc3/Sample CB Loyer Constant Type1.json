@@ -1,8 +1,11 @@
 {
     "product family" : "leasing",
-    "calculator" : [
 
-        "Leasing in arrears", {
+    "calculator" : "MultiSheetCalculator",
+
+    "specs" : [
+        {
+            "sheet" : "Leasing in arrears",
             "input" : {
                 "currency" : "EUR",
                 "base" : "base_30360",
@@ -12,9 +15,12 @@
                 "residual value" : 2000.00,
                 "rent" : 1250.00,
                 "rate" : 0.25,
-                "start date" : "2013-03-01",
+                "start dateValue" : "2013-03-01",
             },
-            "output" :  ["PAYMENT_DATE", "CAPITAL", "INTEREST"]
-        },
+            "output" : ["PAYMENT_DATE", "CAPITAL", "INTEREST"]
+        }
     ]
 }
+//"initial fixed fee" : 300.00,
+//"recurring fixed charge" : 0.01
+

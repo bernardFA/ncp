@@ -1,6 +1,9 @@
 {
     "product family" : "loan",
-    "calculator" : [
+
+    "calculator" : "MultiSheetCalculator",
+
+    "specs" : [
         {
             "name" : "simple loan",
             "input" : {
@@ -12,7 +15,7 @@
                 "residual value" : 2000.00,
                 "rent" : 1250.00,
                 "rate" : 0.25,
-                "start date" : "2013-03-01",
+                "start dateValue" : "2013-03-01",
             },
             "output" :  ["PAYMENT_DATE", "CAPITAL", "INTEREST"]
         },
@@ -25,3 +28,5 @@
         },
     ]
 }
+
+
